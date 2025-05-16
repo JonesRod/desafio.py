@@ -11,27 +11,45 @@ def menu():
     [e]\tExtrato
     [nc]\tNova conta
     [lc]\tListar contas
-    [nu]\tNovo usuário
     [q]\tSair
     => """
     return input(textwrap.dedent(menu))
 
 # Função para realizar o depósito
 def depositar(saldo, valor, extrato, /):
-    # Verifica se o valor do depósito é válido
+    # Permite cancelar o depósito digitando 'x'
+    valor_str = input("Informe o valor do depósito ou digite 'x' e tecle Enter para cancelar: ")
+    if valor_str.lower() == "x":
+        print("Operação de depósito cancelada.")
+        return saldo, extrato
+    try:
+        valor = float(valor_str)
+    except ValueError:
+        print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
+        return saldo, extrato
+
     if valor > 0:
-        saldo += valor  # Atualiza o saldo
-        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")  # Registra a data e hora
-        extrato += f"{data_hora} Depósito:\tR$ {valor:.2f}\n"  # Adiciona ao extrato
+        saldo += valor
+        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        extrato += f"{data_hora} Depósito:\tR$ {valor:.2f}\n"
         print("\n=== Depósito realizado com sucesso! ===")
     else:
         print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
-
-    return saldo, extrato  # Retorna o saldo atualizado e o extrato
+    return saldo, extrato
 
 # Função para realizar o saque
 def sacar(*, saldo, valor, extrato, limite, numero_saques, limite_saques):
-    # Verifica se o saque respeita as condições
+    # Permite cancelar o saque digitando 'x'
+    valor_str = input("Informe o valor do saque ou digite 'x' e tecle Enter para cancelar: ")
+    if valor_str.lower() == "x":
+        print("Operação de saque cancelada.")
+        return saldo, extrato
+    try:
+        valor = float(valor_str)
+    except ValueError:
+        print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
+        return saldo, extrato
+
     excedeu_saldo = valor > saldo
     excedeu_limite = valor > limite
     excedeu_saques = numero_saques >= limite_saques
@@ -43,15 +61,14 @@ def sacar(*, saldo, valor, extrato, limite, numero_saques, limite_saques):
     elif excedeu_saques:
         print("\n@@@ Operação falhou! Número máximo de saques excedido. @@@")
     elif valor > 0:
-        saldo -= valor  # Atualiza o saldo
-        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")  # Registra a data e hora
-        extrato += f"[{data_hora}] Saque:\t\tR$ {valor:.2f}\n"  # Adiciona ao extrato
-        numero_saques += 1  # Incrementa o número de saques
+        saldo -= valor
+        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        extrato += f"[{data_hora}] Saque:\t\tR$ {valor:.2f}\n"
+        numero_saques += 1
         print("\n=== Saque realizado com sucesso! ===")
     else:
         print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
-
-    return saldo, extrato  # Retorna o saldo atualizado e o extrato
+    return saldo, extrato
 
 # Função para exibir o extrato da conta
 def exibir_extrato(saldo, /, *, extrato):
@@ -63,21 +80,35 @@ def exibir_extrato(saldo, /, *, extrato):
 
 # Função para criar um novo usuário
 def criar_usuario(usuarios):
-    # Solicita os dados do usuário
-    cpf = input("Informe o CPF (somente número): ")
-    usuario = filtrar_usuario(cpf, usuarios)
+    # Solicita os dados do usuário, permitindo cancelar a qualquer momento digitando 'x'
+    cpf = input("Informe o CPF (somente número) ou digite 'x' e tecle Enter para cancelar: ")
+    if cpf.lower() == "x":
+        print("Operação de criação de usuário cancelada.")
+        return False
 
+    usuario = filtrar_usuario(cpf, usuarios)
     if usuario:
         print("\n@@@ Já existe usuário com esse CPF! @@@")
-        return
+        return False
 
-    nome = input("Informe o nome completo: ")
-    data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
-    endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+    nome = input("Informe o nome completo ou digite 'x' e tecle Enter para cancelar: ")
+    if nome.lower() == "x":
+        print("Operação de criação de usuário cancelada.")
+        return False
 
-    # Adiciona o novo usuário à lista de usuários
+    data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa) ou digite 'x' e tecle Enter para cancelar: ")
+    if data_nascimento.lower() == "x":
+        print("Operação de criação de usuário cancelada.")
+        return False
+
+    endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado) ou digite 'x' e tecle Enter para cancelar: ")
+    if endereco.lower() == "x":
+        print("Operação de criação de usuário cancelada.")
+        return False
+
     usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
     print("=== Usuário criado com sucesso! ===")
+    return True
 
 # Função para buscar um usuário pelo CPF
 def filtrar_usuario(cpf, usuarios):
@@ -87,15 +118,19 @@ def filtrar_usuario(cpf, usuarios):
 
 # Função para criar uma nova conta bancária
 def criar_conta(agencia, numero_conta, usuarios):
-    # Solicita o CPF do usuário e verifica se ele está cadastrado
-    cpf = input("Informe o CPF do usuário: ")
+    # Solicita o CPF do usuário e verifica se ele está cadastrado, permitindo cancelar com 'x'
+    cpf = input("Informe o CPF do usuário ou digite 'x' e tecle Enter para cancelar: ")
+    if cpf.lower() == "x":
+        print("Operação de criação de conta cancelada.")
+        return None
+
     usuario = filtrar_usuario(cpf, usuarios)
+    if not usuario:
+        print("\n@@@ Usuário não encontrado, fluxo de criação de conta encerrado! @@@")
+        return None
 
-    if usuario:
-        print("\n=== Conta criada com sucesso! ===")
-        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
-
-    print("\n@@@ Usuário não encontrado, fluxo de criação de conta encerrado! @@@")
+    print("\n=== Conta criada com sucesso! ===")
+    return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
 
 # Função para listar todas as contas cadastradas
 def listar_contas(contas):
@@ -109,13 +144,12 @@ def listar_contas(contas):
         print("=" * 100)
         print(textwrap.dedent(linha))
 
-
 # Função para iniciar o programa
 def iniciar_programa():
     # Exibe a tela inicial e solicita a escolha do usuário
     print("Bem-vindo ao sistema bancário!")
     while True:
-        opcao = input("\nEscolha uma operação:\n[1] Abrir uma conta\n[2] Acessar minha conta\n=> ")
+        opcao = input('\nEscolha uma operação:\n[1] Novo usuário\n[2] Acessar minha conta\n=> ')
         if opcao in ["1", "2"]:
             return opcao
         else:
@@ -123,10 +157,13 @@ def iniciar_programa():
 
 # Função para acessar uma conta existente
 def acessar_conta(usuarios, contas):
-    # Solicita o CPF e verifica se há uma conta associada
-    cpf = input("Informe o CPF para acessar sua conta: ")
-    usuario = filtrar_usuario(cpf, usuarios)
+    # Solicita o CPF e verifica se há uma conta associada, permitindo cancelar com 'x'
+    cpf = input("Informe o CPF para acessar sua conta ou digite 'x' e tecle Enter para cancelar: ")
+    if cpf.lower() == "x":
+        print("Operação de acesso à conta cancelada.")
+        return None
 
+    usuario = filtrar_usuario(cpf, usuarios)
     if not usuario:
         print("\n@@@ Usuário não encontrado! Certifique-se de que o CPF está correto ou crie uma conta. @@@")
         return None
@@ -157,16 +194,18 @@ def main():
         opcao_inicial = iniciar_programa()
 
         if opcao_inicial == "1":
-            # Fluxo para abrir uma nova conta
-            print("\n=== Fluxo de abertura de conta ===")
-            criar_usuario(usuarios)
+            # Fluxo para criar um novo usuário e abrir uma conta
+            print('\n=== Fluxo para novo usuário ===\n//// Para cancelar digite "x"')
+            usuario_criado = criar_usuario(usuarios)
+            if not usuario_criado:
+                continue  # Se cancelou, volta ao menu inicial
             numero_conta = len(contas) + 1
             conta = criar_conta(AGENCIA, numero_conta, usuarios)
             if conta:
                 contas.append(conta)
                 print("\nConta criada com sucesso! Você pode acessá-la agora.")
             else:
-                print("\nNão foi possível criar a conta. Reinicie o programa para tentar novamente.")
+                print("\nNão foi possível criar a conta ou operação cancelada.")
 
         elif opcao_inicial == "2":
             # Fluxo para acessar uma conta existente
@@ -179,16 +218,12 @@ def main():
                 opcao = menu()
 
                 if opcao == "d":
-                    # Realiza um depósito
-                    valor = float(input("Informe o valor do depósito: "))
-                    saldo, extrato = depositar(saldo, valor, extrato)
+                    saldo, extrato = depositar(saldo, 0, extrato)  # valor será solicitado dentro da função
 
                 elif opcao == "s":
-                    # Realiza um saque
-                    valor = float(input("Informe o valor do saque: "))
                     saldo, extrato = sacar(
                         saldo=saldo,
-                        valor=valor,
+                        valor=0,  # valor será solicitado dentro da função
                         extrato=extrato,
                         limite=limite,
                         numero_saques=numero_saques,
@@ -198,10 +233,6 @@ def main():
                 elif opcao == "e":
                     # Exibe o extrato
                     exibir_extrato(saldo, extrato=extrato)
-
-                elif opcao == "nu":
-                    # Cria um novo usuário
-                    criar_usuario(usuarios)
 
                 elif opcao == "nc":
                     # Cria uma nova conta
