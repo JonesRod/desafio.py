@@ -149,7 +149,7 @@ def iniciar_programa():
     # Exibe a tela inicial e solicita a escolha do usuário
     print("Bem-vindo ao sistema bancário!")
     while True:
-        opcao = input('\nEscolha uma operação:\n[1] Novo usuário\n[2] Acessar minha conta\n=> ')
+        opcao = input('\nEscolha uma operação:\n[1] Novo usuário\n[2] Acessar Minha Conta\n=> ')
         if opcao in ["1", "2"]:
             return opcao
         else:
